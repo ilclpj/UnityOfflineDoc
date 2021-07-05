@@ -23,13 +23,18 @@ def filter_html(html_path, out_path):
         text = str(f.read(), encoding="utf-8")
         text = re.sub(u"&quot;", "'", text)
 
-        soup = bs4.BeautifulSoup(text, features="lxml")
+        soup = bs4.BeautifulSoup(text, 'lxml')
         for elem in soup.select('link'):
             if "href" in elem.attrs and elem.attrs["href"].find("google") != -1:
                 elem.extract()
 
         for elem in soup.select('script'):
-            if len(elem) > 0 and elem.contents[0].find("google") != -1:
+            if len(elem.contents) > 0:
+                content = elem.contents[0]
+                if content.find("google") != -1:
+                    elem.extract()
+
+            if "src" in elem.attrs and elem.attrs["src"].find("cookielaw") != -1:
                 elem.extract()
 
         for elem in soup.select('iframe'):
@@ -37,9 +42,6 @@ def filter_html(html_path, out_path):
                 elem.extract()
 
         write_xml(soup.prettify(), out_path)
-
-        # text = str(f.read(), encoding="utf-8")
-        # text = re.sub(u"&quot;", u"----", text)
 
 def handle_common_dir(dir_path, out_dir):
     if os.path.exists(out_dir):
@@ -61,8 +63,8 @@ def filter_dir(dir_path, out_dir):
     if os.path.exists(docdata):
         shutil.copytree(docdata, os.path.join(out_dir, "docdata"))
 
-    limit = 1000000
-    base_count = 200
+    limit = 100000
+    base_count = 500
     flag = 0
 
     for root, dirs, files in os.walk(dir_path):
